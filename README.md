@@ -1,0 +1,2 @@
+# httpmappers
+调用第三方接口的http请求像调用mybatis的mapper一样
