@@ -70,6 +70,7 @@ public class DefaultHttpExecutor implements HttpExecutor,AutoCloseable {
             }
 
             HttpUriRequest httpUriRequest = buildHttpRequest(request,paramsObject);
+            LOGGER.debug("paramsObject is ==>{}",JSONObject.toJSONString(paramsObject));
             LOGGER.debug("execute http request:mapperRequest={}, httpUriRequest={}", request, JSONObject.toJSONString(httpUriRequest));
             HttpResponse response = httpClient.execute(httpUriRequest);
             return response;
