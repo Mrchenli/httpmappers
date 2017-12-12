@@ -71,7 +71,7 @@ public class DefaultHttpExecutor implements HttpExecutor,AutoCloseable {
             }
 
             HttpUriRequest httpUriRequest = buildHttpRequest(request,paramsObject);
-            if(headers!=null){
+            if(headers!=null&&!headers.isEmpty()){
                 for (Map.Entry<String,String> entry :headers.entrySet()) {
                     httpUriRequest.setHeader(entry.getKey(),entry.getValue());
                 }
