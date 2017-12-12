@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -52,7 +53,7 @@ public class DefaultHttpExecutor implements HttpExecutor,AutoCloseable {
      * @return
      */
     @Override
-    public HttpResponse execute(MapperRequest request, Object paramsObject) {
+    public HttpResponse execute(MapperRequest request, Object paramsObject,Map<String,String> headers) {
         try {
             checkNotNull(request);
 
@@ -70,8 +71,13 @@ public class DefaultHttpExecutor implements HttpExecutor,AutoCloseable {
             }
 
             HttpUriRequest httpUriRequest = buildHttpRequest(request,paramsObject);
-            LOGGER.debug("paramsObject is ==>{}",JSONObject.toJSONString(paramsObject));
-            LOGGER.debug("execute http request:mapperRequest={}, httpUriRequest={}", request, JSONObject.toJSONString(httpUriRequest));
+            if(headers!=null){
+                for (Map.Entry<String,String> entry :headers.entrySet()) {
+                    httpUriRequest.setHeader(entry.getKey(),entry.getValue());
+                }
+            }
+            LOGGER.info("paramsObject is ==>{}",JSONObject.toJSONString(paramsObject));
+            LOGGER.info("execute http request:mapperRequest={}, httpUriRequest={}", request, JSONObject.toJSONString(httpUriRequest));
             HttpResponse response = httpClient.execute(httpUriRequest);
             return response;
         }catch (Exception e){

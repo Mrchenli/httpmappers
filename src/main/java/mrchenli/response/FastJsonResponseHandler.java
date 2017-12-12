@@ -37,7 +37,7 @@ public class FastJsonResponseHandler implements ResponseHandler {
     final HttpEntity entity = response.getEntity();
     try {
       text =  EntityUtils.toString(entity);
-      LOGGER.debug("request result: request={}, result={}", request, text);
+      LOGGER.info("request result: request={}, result={}", request, text);
       if(text.indexOf("sign")!=-1){
         Object obj = handleRsa(request,text);
         if(obj == null){

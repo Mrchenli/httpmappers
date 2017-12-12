@@ -15,9 +15,7 @@ import mrchenli.http.executor.HttpExecutor;
 import mrchenli.propertiesconfig.Config;
 import mrchenli.propertiesconfig.ConfigManager;
 import mrchenli.request.MapperRequest;
-import mrchenli.request.param.ReqParam;
-import mrchenli.request.param.RsaParam;
-import mrchenli.request.param.SignParam;
+import mrchenli.request.param.*;
 import mrchenli.utils.MapperRequestKeyUtil;
 import mrchenli.utils.ReflectUtil;
 import org.apache.http.HttpResponse;
@@ -27,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -53,36 +52,37 @@ public class MapperProxyFactory extends AbstractInvocationHandler{
 
     @Override
     protected Object handleInvocation(Object o, Method method, Object[] args) throws Throwable {
-        try (HttpExecutor httpExecutor = this.httpExecutor){
-            String mrKey = MapperRequestKeyUtil.getKey(method);
-            MapperRequest mapperRequest = configuration.getMapperRequest(mrKey);
-            checkNotNull(mapperRequest);
-            Object params = resolveRequestParameter(mapperRequest,method,args);
-            //前置操作的处理
-            invokePostProcessBefore(mapperRequest,params,mapperRequest.getPostProcessors());
-            HttpResponse response = httpExecutor.execute(mapperRequest,params);
-            logger.info("response statusline is ==>{}",response.getStatusLine());
-            if(response.getStatusLine().getStatusCode()!=200){
-                throw new RuntimeException(JSONObject.toJSONString(response.getStatusLine()));
-            }
-            Object target =  mapperRequest.getResponseHandler().handle(mapperRequest,response);
-            //执行后置的操作 然后返回
-            return invokePostProcessAfter(mapperRequest,params,target,mapperRequest.getPostProcessors());
-        }catch (Exception e){
-            throw new RuntimeException(e);
+        String mrKey = MapperRequestKeyUtil.getKey(method);
+        MapperRequest mapperRequest = configuration.getMapperRequest(mrKey);
+        checkNotNull(mapperRequest);
+        HttpRequestBean requestBean = resolveRequestParameter(mapperRequest,method,args);
+        Object params =requestBean.getParam();
+        Map<String,String> headers = requestBean.getHeaders();
+        //前置操作的处理
+        invokePostProcessBefore(mapperRequest,params,mapperRequest.getPostProcessors());
+        HttpResponse response = httpExecutor.execute(mapperRequest,params,headers);
+        logger.info("response statusline is ==>{}",response.getStatusLine());
+        if(response.getStatusLine().getStatusCode()!=200){
+            throw new RuntimeException(JSONObject.toJSONString(response.getStatusLine()));
         }
+        Object target =  mapperRequest.getResponseHandler().handle(mapperRequest,response);
+        //执行后置的操作 然后返回
+        return invokePostProcessAfter(mapperRequest,params,target,mapperRequest.getPostProcessors());
     }
 
-    /*ok 发送rsa数据可以隐藏了 接下来就是接收rsaelse if(args.length==1){
-    paramObject = args[0];}*/
-    private Object resolveRequestParameter(MapperRequest request,Method method, Object[] args) {
+
+    private HttpRequestBean resolveRequestParameter(MapperRequest request,Method method, Object[] args) {
+        HttpRequestBean httpRequestBean  = new HttpRequestBean();
         try {
             final Object paramObject;
+            final Map<String,String> headers;
             if (args == null || args.length == 0) {
                 paramObject = Collections.emptyMap();
+                headers = Collections.emptyMap();
             } else {
                 final Annotation[][] parameterAnnotations = method.getParameterAnnotations();
                 final Map<String, Object> tmpParams = Maps.newHashMapWithExpectedSize(args.length);
+                final Map<String,String> tempHeaders = Maps.newHashMap();
                 outer:
                 for (int i = 0; i < parameterAnnotations.length; i++) {
                     Annotation[] annotations = parameterAnnotations[i];
@@ -106,12 +106,21 @@ public class MapperProxyFactory extends AbstractInvocationHandler{
                             tmpParams.put(((ReqParam) annotation).value(), args[i]);
                             continue outer;
                         }
+
+                        if(annotation instanceof HeaderParam){
+                            if(args[i] instanceof String){
+                                tempHeaders.put(((HeaderParam) annotation).value(), (String) args[i]);
+                            }
+                        }
                     }
-                    ReflectUtil.objectToMap(tmpParams,args[i]);
+                    ReflectUtil.objectToMap(tmpParams,tempHeaders,HeaderParam.class,args[i]);
                 }
                 paramObject = tmpParams;
+                headers = tempHeaders;
             }
-            return paramObject;
+            httpRequestBean.setParam(paramObject);
+            httpRequestBean.setHeaders(headers);
+            return httpRequestBean;
         }catch (Exception e){
             throw new RuntimeException(e);
         }
