@@ -16,9 +16,11 @@ import mrchenli.propertiesconfig.Config;
 import mrchenli.propertiesconfig.ConfigManager;
 import mrchenli.request.MapperRequest;
 import mrchenli.request.param.*;
+import mrchenli.response.FastJsonResponseHandler;
 import mrchenli.utils.MapperRequestKeyUtil;
 import mrchenli.utils.ReflectUtil;
 import org.apache.http.HttpResponse;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,18 +58,20 @@ public class MapperProxyFactory extends AbstractInvocationHandler{
         MapperRequest mapperRequest = configuration.getMapperRequest(mrKey);
         checkNotNull(mapperRequest);
         HttpRequestBean requestBean = resolveRequestParameter(mapperRequest,method,args);
-        Object params =requestBean.getParam();
-        Map<String,String> headers = requestBean.getHeaders();
-        //前置操作的处理
-        invokePostProcessBefore(mapperRequest,params,mapperRequest.getPostProcessors());
-        HttpResponse response = httpExecutor.execute(mapperRequest,params,headers);
+        HttpResponse response = httpExecutor.execute(mapperRequest,requestBean);
         logger.info("response statusline is ==>{}",response.getStatusLine());
         if(response.getStatusLine().getStatusCode()!=200){
-            throw new RuntimeException(JSONObject.toJSONString(response.getStatusLine()));
+            if(response.getStatusLine().getStatusCode()==400){
+                if(mapperRequest.getResponseHandler() instanceof FastJsonResponseHandler){
+                    throw new RuntimeException(JSONObject.toJSONString(response.getStatusLine()));
+                }
+            }else {
+                throw new RuntimeException(JSONObject.toJSONString(response.getStatusLine()));
+            }
         }
         Object target =  mapperRequest.getResponseHandler().handle(mapperRequest,response);
         //执行后置的操作 然后返回
-        return invokePostProcessAfter(mapperRequest,params,target,mapperRequest.getPostProcessors());
+        return invokePostProcessAfter(mapperRequest,requestBean,target,mapperRequest.getPostProcessors());
     }
 
 
@@ -76,13 +80,16 @@ public class MapperProxyFactory extends AbstractInvocationHandler{
         try {
             final Object paramObject;
             final Map<String,String> headers;
+            final Map<String,String> urlParams;
             if (args == null || args.length == 0) {
                 paramObject = Collections.emptyMap();
                 headers = Collections.emptyMap();
+                urlParams = Collections.emptyMap();
             } else {
                 final Annotation[][] parameterAnnotations = method.getParameterAnnotations();
                 final Map<String, Object> tmpParams = Maps.newHashMapWithExpectedSize(args.length);
                 final Map<String,String> tempHeaders = Maps.newHashMap();
+                final Map<String,String> tempUrlParams = Maps.newHashMap();
                 outer:
                 for (int i = 0; i < parameterAnnotations.length; i++) {
                     Annotation[] annotations = parameterAnnotations[i];
@@ -112,29 +119,31 @@ public class MapperProxyFactory extends AbstractInvocationHandler{
                                 tempHeaders.put(((HeaderParam) annotation).value(), (String) args[i]);
                             }
                         }
+                        if(annotation instanceof  UrlParam){
+                            if(args[i] instanceof String){
+                                tempUrlParams.put(((UrlParam) annotation).value(), (String) args[i]);
+                            }
+                        }
                     }
-                    ReflectUtil.objectToMap(tmpParams,tempHeaders,HeaderParam.class,args[i]);
+                    ReflectUtil.objectToMap(tmpParams,tempHeaders,tempUrlParams,args[i]);
                 }
                 paramObject = tmpParams;
                 headers = tempHeaders;
+                urlParams = tempUrlParams;
             }
             httpRequestBean.setParam(paramObject);
             httpRequestBean.setHeaders(headers);
+            httpRequestBean.setUrlParams(urlParams);
             return httpRequestBean;
         }catch (Exception e){
             throw new RuntimeException(e);
         }
     }
 
-    public void invokePostProcessBefore(MapperRequest mapperRequest,Object objectParam, List<PostProcessor> processors){
-        for (PostProcessor postProcessor:processors){
-            postProcessor.handlerBefore(mapperRequest,objectParam);
-        }
-    }
 
-    public Object invokePostProcessAfter(MapperRequest request,Object objectParam ,Object target, List<PostProcessor> processors){
+    public Object invokePostProcessAfter(MapperRequest request,HttpRequestBean requestBean ,Object target, List<PostProcessor> processors){
         for (PostProcessor postProcessor:processors){
-            target = postProcessor.handleAfter(request,objectParam,target);
+            target = postProcessor.handleAfter(request,requestBean,target);
         }
         return target;
     }

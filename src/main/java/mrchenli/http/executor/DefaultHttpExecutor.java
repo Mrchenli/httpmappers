@@ -6,11 +6,13 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import mrchenli.handler.PostProcessor;
 import mrchenli.http.httpclient.HttpClientFactory;
 import mrchenli.propertiesconfig.Config;
 import mrchenli.propertiesconfig.ConfigManager;
 import mrchenli.request.MapperRequest;
 import mrchenli.request.param.EntityType;
+import mrchenli.request.param.HttpRequestBean;
 import mrchenli.utils.ReflectUtil;
 import mrchenli.utils.StringUtil;
 import org.apache.http.HttpEntity;
@@ -32,7 +34,9 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -47,36 +51,70 @@ public class DefaultHttpExecutor implements HttpExecutor,AutoCloseable {
         this.httpClient =  factory.create();
     }
 
+
+    public void invokePostProcessBefore(Map<String,String> headers,Map<String,Object> params,Map<String,String> urlParams, List<PostProcessor> processors){
+        for (PostProcessor postProcessor:processors){
+            postProcessor.handlerBefore(headers,params,urlParams);
+        }
+    }
+
     /**
      * @param request mapperRequest params
-     * @param paramsObject
+     * @param httpRequestBean
      * @return
      */
     @Override
-    public HttpResponse execute(MapperRequest request, Object paramsObject,Map<String,String> headers) {
+    public HttpResponse execute(MapperRequest request,HttpRequestBean httpRequestBean) {
         try {
             checkNotNull(request);
 
+            Map<String,String> headers = httpRequestBean.getHeaders();
+            Object paramsObject = httpRequestBean.getParam();
+            Map<String,Object> tempParam = Maps.newHashMap();
+            if(paramsObject instanceof Map){
+                tempParam = (Map<String, Object>) paramsObject;
+            }else{
+                tempParam = Maps.newHashMap();
+                ReflectUtil.objectToMap(tempParam,paramsObject);
+            }
+            invokePostProcessBefore(headers,tempParam,httpRequestBean.getUrlParams(),request.getPostProcessors());
             /**
              * 如果是配置文件里面的话
              */
             String url = request.getRequestInfo().getUrl();
+
             if(!StringUtil.isEmpty(url)&&!url.startsWith("http")){
                 Config config = ConfigManager.getConfig(request.getConfigKey());
                 url = config.getHttpMapperPropertiesUtil().getValue(url);
                 if(url.startsWith("\"")){
                     url = url.trim().substring(1,url.length()-1);
                 }
+                Map<String,String> urlParams = httpRequestBean.getUrlParams();
+                if(urlParams!=null&&!urlParams.isEmpty()){
+                    for (Map.Entry<String,String> entry : urlParams.entrySet()){
+                        if(entry.getKey().equals("urlEncode")){
+                            continue;
+                        }
+                        String name = "{"+entry.getKey()+"}";
+                        String value = entry.getValue();
+                        url = url.replace(name,value);
+                    }
+                }
+                if(urlParams.containsKey("urlEncode")){
+                    String[] us = url.split("\\?");
+                    String l = URLEncoder.encode(us[0],"utf-8");
+                    char c = 63;
+                    url = us[0]+c+l;
+                }
                 request.getRequestInfo().setUrl(url);
             }
-
-            HttpUriRequest httpUriRequest = buildHttpRequest(request,paramsObject);
+            HttpUriRequest httpUriRequest = buildHttpRequest(request,tempParam);
             if(headers!=null&&!headers.isEmpty()){
                 for (Map.Entry<String,String> entry :headers.entrySet()) {
                     httpUriRequest.setHeader(entry.getKey(),entry.getValue());
                 }
             }
-            LOGGER.info("paramsObject is ==>{}",JSONObject.toJSONString(paramsObject));
+            LOGGER.info("httpRequestBean is ==>{}",JSONObject.toJSONString(httpRequestBean));
             LOGGER.info("execute http request:mapperRequest={}, httpUriRequest={}", request, JSONObject.toJSONString(httpUriRequest));
             HttpResponse response = httpClient.execute(httpUriRequest);
             return response;
@@ -99,13 +137,14 @@ public class DefaultHttpExecutor implements HttpExecutor,AutoCloseable {
      * @param params
      * @return
      */
-    private HttpUriRequest buildHttpRequest(MapperRequest request,Object params){
+    private HttpUriRequest buildHttpRequest(MapperRequest request,Map<String,Object> params){
         try {
             switch (request.getHttpMethod()){
 
                 case GET:{
                     final HttpGet httpGet = new HttpGet();
                     httpGet.setURI(new URI(request.getRequestInfo().getUrl()));
+                    httpGet.setHeader("Content-Encoding",request.getRequestInfo().getUrlCharset());
                     return httpGet;
                 }
 
@@ -113,6 +152,7 @@ public class DefaultHttpExecutor implements HttpExecutor,AutoCloseable {
                     final HttpPost httpPost = new HttpPost();
                     httpPost.setEntity(createHttpEntity(params,request.getEntityType()));
                     httpPost.setURI(new URI(request.getRequestInfo().getUrl()));
+                    httpPost.setHeader("Content-Encoding",request.getRequestInfo().getUrlCharset());
                     return httpPost;
                 }
                 default:
@@ -126,7 +166,7 @@ public class DefaultHttpExecutor implements HttpExecutor,AutoCloseable {
         return null;
     }
 
-    private HttpEntity createHttpEntity(Object params ,EntityType entityType) throws IllegalAccessException {
+    private HttpEntity createHttpEntity(Map<String,Object> params ,EntityType entityType) throws IllegalAccessException {
         switch (entityType){
             case JSON_STRING:
                 try {
@@ -136,15 +176,8 @@ public class DefaultHttpExecutor implements HttpExecutor,AutoCloseable {
                 }
             case FORM:
             default:
-                Map<String,Object> par;
-                if(params instanceof Map){
-                    par = (Map<String, Object>) params;
-                }else{
-                    par = Maps.newHashMap();
-                    ReflectUtil.objectToMap(par,params);
-                }
                 return new UrlEncodedFormEntity(
-                        Iterables.transform(par.entrySet(),
+                        Iterables.transform(params.entrySet(),
                         (Function<Map.Entry<String, Object>, NameValuePair>) en -> new BasicNameValuePair(en.getKey(), String.valueOf(en.getValue())))
                 );
         }

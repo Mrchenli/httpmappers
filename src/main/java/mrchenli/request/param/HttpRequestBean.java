@@ -7,4 +7,5 @@ import java.util.Map;
 public class HttpRequestBean {
     private Object param;
     private Map<String,String> headers;
+    private Map<String,String> urlParams;
 }
