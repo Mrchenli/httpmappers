@@ -60,15 +60,6 @@ public class MapperProxyFactory extends AbstractInvocationHandler{
         HttpRequestBean requestBean = resolveRequestParameter(mapperRequest,method,args);
         HttpResponse response = httpExecutor.execute(mapperRequest,requestBean);
         logger.info("response statusline is ==>{}",response.getStatusLine());
-        if(response.getStatusLine().getStatusCode()!=200){
-            if(response.getStatusLine().getStatusCode()==400){
-                if(mapperRequest.getResponseHandler() instanceof FastJsonResponseHandler){
-                    throw new RuntimeException(JSONObject.toJSONString(response.getStatusLine()));
-                }
-            }else {
-                throw new RuntimeException(JSONObject.toJSONString(response.getStatusLine()));
-            }
-        }
         Object target =  mapperRequest.getResponseHandler().handle(mapperRequest,response);
         //执行后置的操作 然后返回
         return invokePostProcessAfter(mapperRequest,requestBean,target,mapperRequest.getPostProcessors());

@@ -33,7 +33,7 @@ public abstract class AbstractResponseHandler implements ResponseHandler{
         final HttpEntity entity = response.getEntity();
         try {
             text =  EntityUtils.toString(entity);
-            LOGGER.info("request result: request={}, result={}", request, text);
+            LOGGER.info("result:result={}",text);
             if(text.indexOf("sign")!=-1){
                 Object obj = handleRsa(request,text);
                 if(obj == null){
@@ -42,9 +42,15 @@ public abstract class AbstractResponseHandler implements ResponseHandler{
                     text = JSONObject.toJSONString(obj);
                 }
             }
+
             text = removeDataString(text,request.getResultJsonPath());
             //这个用来针对 fed 400的时候是业务错误
             text = convertTextToWeWant(text, response.getStatusLine().getStatusCode());
+
+            /*
+             *从响应头里面读取一些数据出来
+             */
+            text = readFromResponseHeaders(text,response);
 
             final Type returnType = request.getReturnType();
             if (returnType instanceof Class) {
@@ -59,10 +65,27 @@ public abstract class AbstractResponseHandler implements ResponseHandler{
         return null;
     }
 
+    /**
+     * 从headers 里面获取一些数据的时候 默认是不用加的
+     * @param text
+     * @param response
+     * @return
+     */
+    public String readFromResponseHeaders(String text,HttpResponse response){
+        return text;
+    }
+
+
     public abstract String convertTextToWeWant(String text,Integer code);
 
     protected String removeDataString(String text ,String jsonPath){
-        JSONObject data = JSONObject.parseObject(text);
+        JSONObject data;
+        try {
+            data = JSONObject.parseObject(text);
+        }catch (Exception e){
+            LOGGER.warn("removing data str error text is ==>{}",text);
+            return text;
+        }
         if(StringUtil.isEmpty(jsonPath)){
             return text;
         }

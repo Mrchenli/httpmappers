@@ -46,6 +46,19 @@ public class ConfigManager {
         return configs.get(canonicalName);
     }
 
+    public static String getValueByCanoName(String canonicalName ,String key){
+        return getConfig(canonicalName).getHttpMapperPropertiesUtil().getValue(key);
+    }
+
+    public static String getValueByType(Class clzz ,String key){
+        return getConfigByType(clzz).getHttpMapperPropertiesUtil().getValue(key);
+    }
+
+    public static String getValueByAppid(String appid ,String key){
+        return getConfigByAppid(appid).getHttpMapperPropertiesUtil().getValue(key);
+    }
+
+
     public static Config getConfigByType(Class clzz){
         return configs.get(clzz.getCanonicalName());
     }

@@ -25,7 +25,10 @@ public class ReflectUtil {
                     if(temHeaders!=null){
                         if(f.isAnnotationPresent(HeaderParam.class)){
                             if(f.get(params) instanceof String){
-                                temHeaders.put(f.getName(), (String) f.get(params));
+                                HeaderParam headerParam = f.getAnnotation(HeaderParam.class);
+                                String key = headerParam.value();
+                                key = StringUtil.isEmpty(key)?f.getName():key;
+                                temHeaders.put(key, (String) f.get(params));
                             }
                         }
                     }
@@ -33,7 +36,10 @@ public class ReflectUtil {
                     if(tempUrlParams!=null){
                         if(f.isAnnotationPresent(UrlParam.class)){
                             if(f.get(params) instanceof String){
-                                tempUrlParams.put(f.getName(), (String) f.get(params));
+                                UrlParam urlParam = f.getAnnotation(UrlParam.class);
+                                String key = urlParam.value();
+                                key = StringUtil.isEmpty(key)?f.getName():key;
+                                tempUrlParams.put(key, (String) f.get(params));
                             }
                         }
                     }
