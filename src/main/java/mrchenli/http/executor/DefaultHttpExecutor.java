@@ -24,7 +24,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +34,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
-import java.util.ArrayList;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 
@@ -82,7 +81,6 @@ public class DefaultHttpExecutor implements HttpExecutor,AutoCloseable {
              * 如果是配置文件里面的话
              */
             String url = request.getRequestInfo().getUrl();
-
             if(!StringUtil.isEmpty(url)&&!url.startsWith("http")){
                 Config config = ConfigManager.getConfig(request.getConfigKey());
                 url = config.getHttpMapperPropertiesUtil().getValue(url);
@@ -97,7 +95,11 @@ public class DefaultHttpExecutor implements HttpExecutor,AutoCloseable {
                         }
                         String name = "{"+entry.getKey()+"}";
                         String value = entry.getValue();
-                        url = url.replace(name,value);
+                        if(url.contains(name)){
+                            url = url.replace(name,value);
+                        }else {
+                            url=url + "&"+entry.getKey()+"="+entry.getValue();
+                        }
                     }
                 }
                 if(urlParams.containsKey("urlEncode")){
@@ -106,9 +108,9 @@ public class DefaultHttpExecutor implements HttpExecutor,AutoCloseable {
                     char c = 63;
                     url = us[0]+c+l;
                 }
-                request.getRequestInfo().setUrl(url);
+                //request.getRequestInfo().setUrl(url);
             }
-            HttpUriRequest httpUriRequest = buildHttpRequest(request,tempParam);
+            HttpUriRequest httpUriRequest = buildHttpRequest(url,request,tempParam);
             if(headers!=null&&!headers.isEmpty()){
                 for (Map.Entry<String,String> entry :headers.entrySet()) {
                     httpUriRequest.setHeader(entry.getKey(),entry.getValue());
@@ -137,13 +139,13 @@ public class DefaultHttpExecutor implements HttpExecutor,AutoCloseable {
      * @param params
      * @return
      */
-    private HttpUriRequest buildHttpRequest(MapperRequest request,Map<String,Object> params){
+    private HttpUriRequest buildHttpRequest(String url ,MapperRequest request,Map<String,Object> params){
         try {
             switch (request.getHttpMethod()){
 
                 case GET:{
                     final HttpGet httpGet = new HttpGet();
-                    httpGet.setURI(new URI(request.getRequestInfo().getUrl()));
+                    httpGet.setURI(new URI(url));
                     httpGet.setHeader("Content-Encoding",request.getRequestInfo().getUrlCharset());
                     return httpGet;
                 }
@@ -151,7 +153,7 @@ public class DefaultHttpExecutor implements HttpExecutor,AutoCloseable {
                 case POST:{
                     final HttpPost httpPost = new HttpPost();
                     httpPost.setEntity(createHttpEntity(params,request.getEntityType()));
-                    httpPost.setURI(new URI(request.getRequestInfo().getUrl()));
+                    httpPost.setURI(new URI(url));
                     httpPost.setHeader("Content-Encoding",request.getRequestInfo().getUrlCharset());
                     return httpPost;
                 }
@@ -162,11 +164,13 @@ public class DefaultHttpExecutor implements HttpExecutor,AutoCloseable {
             throw new RuntimeException(e);
         } catch (IllegalAccessException e) {
             e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
         }
         return null;
     }
 
-    private HttpEntity createHttpEntity(Map<String,Object> params ,EntityType entityType) throws IllegalAccessException {
+    private HttpEntity createHttpEntity(Map<String,Object> params ,EntityType entityType) throws IllegalAccessException, UnsupportedEncodingException {
         switch (entityType){
             case JSON_STRING:
                 try {
@@ -177,9 +181,11 @@ public class DefaultHttpExecutor implements HttpExecutor,AutoCloseable {
             case FORM:
             default:
                 return new UrlEncodedFormEntity(
-                        Iterables.transform(params.entrySet(),
-                        (Function<Map.Entry<String, Object>, NameValuePair>) en -> new BasicNameValuePair(en.getKey(), String.valueOf(en.getValue())))
-                );
+                         Iterables.transform(params.entrySet(), (Function<Map.Entry<String, Object>, NameValuePair>) en -> new BasicNameValuePair(en.getKey(), String.valueOf(en.getValue())))
+                , Charset.forName("utf-8"));
+               /* return new UrlEncodedFormEntity(
+                        Iterables.transform(params.entrySet(), (Function<Map.Entry<String, Object>, NameValuePair>) en -> new BasicNameValuePair(en.getKey(), String.valueOf(en.getValue())))
+                        );*/
         }
 
     }
