@@ -33,7 +33,7 @@ public abstract class AbstractResponseHandler implements ResponseHandler{
         final HttpEntity entity = response.getEntity();
         try {
             text =  EntityUtils.toString(entity,"utf-8");
-            LOGGER.info("result:result={}",text);
+            LOGGER.info("******"+request.getRequestInfo().getUrl()+"*****"+"result:result={}",text);
             if(text.indexOf("sign")!=-1){
                 Object obj = handleRsa(request,text);
                 if(obj == null){

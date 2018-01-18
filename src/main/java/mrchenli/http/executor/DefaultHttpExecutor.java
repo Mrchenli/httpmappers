@@ -117,7 +117,7 @@ public class DefaultHttpExecutor implements HttpExecutor,AutoCloseable {
                 }
             }
             LOGGER.info("httpRequestBean is ==>{}",JSONObject.toJSONString(httpRequestBean));
-            LOGGER.info("execute http request:mapperRequest={}, httpUriRequest={}", request, JSONObject.toJSONString(httpUriRequest));
+            LOGGER.info("*******"+request.getRequestInfo().getUrl()+"******* execute http request:mapperRequest={}, httpUriRequest={}", request, JSONObject.toJSONString(httpUriRequest));
             HttpResponse response = httpClient.execute(httpUriRequest);
             return response;
         }catch (Exception e){
