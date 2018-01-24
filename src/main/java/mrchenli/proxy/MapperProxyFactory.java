@@ -148,7 +148,7 @@ public class MapperProxyFactory extends AbstractInvocationHandler{
         }else{
             rsaData = JSONObject.toJSONString(data);
         }
-
+        logger.info("des加密前的数据是==>{}",rsaData);
         RsaService rsaService = config.getRsaService();
         DesService desService = config.getDesService();
 
