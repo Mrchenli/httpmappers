@@ -1,7 +1,9 @@
 package mrchenli.propertiesconfig;
 
 
+import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Maps;
+import mrchenli.utils.StringUtil;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +27,8 @@ public class ConfigManager {
                 for (Class<?> clzz :set) {
                     if(Config.class.isAssignableFrom(clzz)){
                         AutoManage autoManage = clzz.getAnnotation(AutoManage.class);
-                        clzz.getConstructor(HttpMapperPropertiesUtil.class).newInstance(new HttpMapperPropertiesUtil(autoManage.value()));
+                        String properties = autoManage.value();
+                        clzz.getConstructor(HttpMapperPropertiesUtil.class).newInstance(new HttpMapperPropertiesUtil(properties));
                     }
                 }
             }

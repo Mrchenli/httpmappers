@@ -173,11 +173,7 @@ public class DefaultHttpExecutor implements HttpExecutor,AutoCloseable {
     private HttpEntity createHttpEntity(Map<String,Object> params ,EntityType entityType) throws IllegalAccessException, UnsupportedEncodingException {
         switch (entityType){
             case JSON_STRING:
-                try {
-                    return new StringEntity(JSON.toJSONString(params));
-                } catch (UnsupportedEncodingException e) {
-                    throw new RuntimeException(e);
-                }
+                return new StringEntity(JSON.toJSONString(params),Charset.forName("utf-8"));
             case FORM:
             default:
                 return new UrlEncodedFormEntity(
