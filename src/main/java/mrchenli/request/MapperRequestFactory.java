@@ -112,6 +112,7 @@ public class MapperRequestFactory {
         }
         //返回值类型
         mapperRequest.setReturnType(method.getGenericReturnType());
+        mapperRequest.setMethod(method);
         return mapperRequest;
     }
 

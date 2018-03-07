@@ -9,6 +9,8 @@ import mrchenli.request.param.EntityType;
 import mrchenli.request.param.RequestInfo;
 import mrchenli.request.type.HttpMethod;
 import mrchenli.response.ResponseHandler;
+
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.List;
 
@@ -26,5 +28,7 @@ public class MapperRequest {
     private Type returnType;
     private ResponseHandler responseHandler;//解析返回值得 序列化 json String什么的
     private List<PostProcessor> postProcessors =Lists.newArrayList() ;//返回值得拦截器列表 //这个是可选的
+
+    private Method method;
 
 }

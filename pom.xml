@@ -54,6 +54,18 @@
             <scope>compile</scope>
         </dependency>
 
+
+        <!-- https://mvnrepository.com/artifact/dom4j/dom4j -->
+        <dependency>
+            <groupId>dom4j</groupId>
+            <artifactId>dom4j</artifactId>
+            <version>1.6.1</version>
+        </dependency>
+        <dependency>
+            <groupId>jaxen</groupId>
+            <artifactId>jaxen</artifactId>
+            <version>1.1.1</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -71,4 +83,26 @@
 
         </plugins>
     </build>
+
+   <!-- <distributionManagement>
+        <repository>
+            <id>nexus</id>
+            <name>releases</name>
+            <url>http://127.0.0.1:8081/nexus/content/repositories/releases/</url>
+        </repository>
+    </distributionManagement>-->
+   <!-- <distributionManagement>
+        <repository>
+            <id>nexus</id>
+            <url>
+                http://10.0.10.74:8081/repository/localmaven/releases/
+            </url>
+        </repository>
+        <snapshotRepository>
+            <id>nexus</id>
+            <url>
+                http://10.0.10.74:8081/repository/localmaven/snapshots/
+            </url>
+        </snapshotRepository>
+    </distributionManagement> -->
 </project>

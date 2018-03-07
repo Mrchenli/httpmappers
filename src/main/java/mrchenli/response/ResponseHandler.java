@@ -3,6 +3,7 @@ package mrchenli.response;
 
 import mrchenli.request.MapperRequest;
 import org.apache.http.HttpResponse;
+import org.dom4j.DocumentException;
 
 
 public interface ResponseHandler {
@@ -12,6 +13,6 @@ public interface ResponseHandler {
      * @param response 返回的数据呀
      * @return
      */
-    Object handle(MapperRequest request, HttpResponse response);
+    Object handle(MapperRequest request, HttpResponse response) throws DocumentException;
 
 }

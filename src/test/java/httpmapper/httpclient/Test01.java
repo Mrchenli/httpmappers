@@ -12,6 +12,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.dom4j.DocumentException;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -20,7 +21,7 @@ import java.lang.reflect.Type;
 public class Test01 {
 
     @Test
-    public void testHttpEntity() throws IOException {
+    public void testHttpEntity() throws IOException, IllegalAccessException, DocumentException, InstantiationException {
         CloseableHttpClient httpclient = HttpClients.createDefault();
         HttpGet httpGet = new HttpGet("http://localhost:8080/home/index.json");
         System.out.println("executing request "+httpGet.getURI());
