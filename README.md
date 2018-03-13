@@ -1,0 +1,2 @@
+# httpmappers
+让http的调用像mybatis 的mapper一样 这样mapper接口就是一个比较易读的“文档” 注解来确定form 还是jsonstring传输格式 结果支持json xml格式解析成对象 可以设置拦截器在发一个请求前先发一个请求获取token
