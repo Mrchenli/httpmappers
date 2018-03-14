@@ -58,55 +58,63 @@ public class Dom4jUtil {
      */
     public static <T> T parseObject(Node node, Class<T> type,Class geneField){
         try {
-            T o = type.newInstance();
-            Field[] fields = type.getDeclaredFields();
-            for (Field f:fields) {
-                Class clzz =null;
-                //判断是否是泛型属性
-                boolean isGenericField= f.getGenericType().getTypeName().length()==1;
-                if(isGenericField){
-                    clzz = geneField;
-                }else{
-                    clzz = f.getType();
-                }
-                String name = upperCase(f.getName());
-                if(Map.class.isAssignableFrom(clzz)){//parseMap//
-                    if(f.isAnnotationPresent(XmlORM.class)){
-                        XmlORM xmlPath= f.getAnnotation(XmlORM.class);
-                        Node mapNode = node.selectSingleNode(name);
-                        f.set(o,parseMap(mapNode,xmlPath.value()));
-                    }
-                }else if(List.class.isAssignableFrom(clzz)){//parseList
-                    ParameterizedType pt = (ParameterizedType) f.getGenericType();
-                    Class ft = (Class) pt.getActualTypeArguments()[0];
-                    Node lnode = node.selectSingleNode(name);
-                    String path = upperCase(ft.getSimpleName());
-
-                    List<Node> nodes = lnode.selectNodes(path);
-                    List list = new ArrayList();
-                    if(Map.class.isAssignableFrom(ft)){
-                        if(f.isAnnotationPresent(XmlORM.class)){
-                            Class lt = f.getAnnotation(XmlORM.class).value();
-                            list = parseList(nodes,lt,true);
-                        }
+            if(node!=null){
+                T o = type.newInstance();
+                Field[] fields = type.getDeclaredFields();
+                for (Field f:fields) {
+                    Class clzz =null;
+                    //判断是否是泛型属性
+                    boolean isGenericField= f.getGenericType().getTypeName().length()==1;
+                    if(isGenericField){
+                        clzz = geneField;
                     }else{
-                        list = parseList(nodes,ft,false);
+                        clzz = f.getType();
                     }
-                    f.set(o,list);
-                }else if(String.class.isAssignableFrom(clzz)){//parseString
-                    String value = node.valueOf(name);
-                    f.setAccessible(true);
-                    f.set(o,value);
-                    f.setAccessible(false);
-                }else{//parseObject
-                    Class tmpGen = f.getGenericType() instanceof ParameterizedType? (Class) ((ParameterizedType) f.getGenericType()).getActualTypeArguments()[0] :null;
-                    Object po = parseObject(node.selectSingleNode(name),clzz,tmpGen);
-                    f.setAccessible(true);
-                    f.set(o,po);
-                    f.setAccessible(false);
+                    String name = upperCase(f.getName());
+                    if(Map.class.isAssignableFrom(clzz)){//parseMap//
+                        if(f.isAnnotationPresent(XmlORM.class)){
+                            XmlORM xmlPath= f.getAnnotation(XmlORM.class);
+                            Node mapNode = node.selectSingleNode(name);
+                            if(mapNode!=null){
+                                f.set(o,parseMap(mapNode,xmlPath.value()));
+                            }
+                        }
+                    }else if(List.class.isAssignableFrom(clzz)){//parseList
+                        ParameterizedType pt = (ParameterizedType) f.getGenericType();
+                        Class ft = (Class) pt.getActualTypeArguments()[0];
+                        Node lnode = node.selectSingleNode(name);
+                        if(lnode!=null){
+                            String path = upperCase(ft.getSimpleName());
+
+                            List<Node> nodes = lnode.selectNodes(path);
+                            if(nodes!=null){
+                                List list = new ArrayList();
+                                if(Map.class.isAssignableFrom(ft)){
+                                    if(f.isAnnotationPresent(XmlORM.class)){
+                                        Class lt = f.getAnnotation(XmlORM.class).value();
+                                        list = parseList(nodes,lt,true);
+                                    }
+                                }else{
+                                    list = parseList(nodes,ft,false);
+                                }
+                                f.set(o,list);
+                            }
+                        }
+                    }else if(String.class.isAssignableFrom(clzz)){//parseString
+                        String value = node.valueOf(name);
+                        f.setAccessible(true);
+                        f.set(o,value);
+                        f.setAccessible(false);
+                    }else{//parseObject
+                        Class tmpGen = f.getGenericType() instanceof ParameterizedType? (Class) ((ParameterizedType) f.getGenericType()).getActualTypeArguments()[0] :null;
+                        Object po = parseObject(node.selectSingleNode(name),clzz,tmpGen);
+                        f.setAccessible(true);
+                        f.set(o,po);
+                        f.setAccessible(false);
+                    }
                 }
+                return o;
             }
-            return o;
         }catch (Exception e){
             LOGGER.info("xml response handler error e==>{}",e);
         }
