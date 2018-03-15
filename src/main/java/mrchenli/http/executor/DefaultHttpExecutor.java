@@ -174,6 +174,14 @@ public class DefaultHttpExecutor implements HttpExecutor,AutoCloseable {
         switch (entityType){
             case JSON_STRING:
                 return new StringEntity(JSON.toJSONString(params),Charset.forName("utf-8"));
+            case SERIALIZER:
+                StringBuilder sb = new StringBuilder();
+                for (Map.Entry<String,Object> entry:params.entrySet()){
+                    sb.append(entry.getKey()+"="+JSONObject.toJSONString(entry.getValue())+"&");
+                }
+                String result = sb.toString();
+                result = result.substring(0,result.length()-1);
+                return new StringEntity(result,"utf-8");
             case FORM:
             default:
                 return new UrlEncodedFormEntity(
@@ -185,5 +193,4 @@ public class DefaultHttpExecutor implements HttpExecutor,AutoCloseable {
         }
 
     }
-
 }

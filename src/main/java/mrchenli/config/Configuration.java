@@ -15,7 +15,6 @@ public class Configuration {
     private MapperRequestFactory mapperRequestFactory;
 
     public MapperRequestFactory getMapperRequestFactory() {
-
         return mapperRequestFactory;
     }
 
@@ -43,7 +42,7 @@ public class Configuration {
     public static class ConfigurationBuilder{
 
         private HttpExecutor httpExecutor;
-        private String[] scanPath;
+        private String[] scanPaths;
 
 
         private ConfigurationBuilder() {
@@ -53,8 +52,8 @@ public class Configuration {
             this.httpExecutor = httpExecutor;
             return this;
         }
-        public ConfigurationBuilder setScanPath(String... scanPath){
-            this.scanPath = scanPath;
+        public ConfigurationBuilder setScanPath(String... scanPaths){
+            this.scanPaths = scanPaths;
             return this;
         }
 
@@ -62,11 +61,11 @@ public class Configuration {
             if(httpExecutor==null){
                 httpExecutor = new DefaultHttpExecutor(new DefaultHttpClientFactory());
             }
-            if(scanPath == null || scanPath.length==0){
+            if(scanPaths == null || scanPaths.length==0){
                 throw new RuntimeException("请指定third mapper 的扫描路径");
             }
 
-            MapperRequestFactory mapperRequestFactory = new MapperRequestFactory(scanPath);
+            MapperRequestFactory mapperRequestFactory = new MapperRequestFactory(scanPaths);
             return new Configuration(httpExecutor,mapperRequestFactory);
         }
     }

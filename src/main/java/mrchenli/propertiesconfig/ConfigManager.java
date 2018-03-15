@@ -1,9 +1,7 @@
 package mrchenli.propertiesconfig;
 
 
-import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.Maps;
-import mrchenli.utils.StringUtil;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,23 +17,24 @@ public class ConfigManager {
     public static final String SELF_CONFIG = "DAFDFNASLZGFNZELWQSZSFAS";
 
 
-    public static void  init(String configPath) {
+    public static void  init(String... configPaths) {
         try {
             if(configs.isEmpty()){
-                Reflections reflections = new Reflections(configPath);
-                Set<Class<?>> set = reflections.getTypesAnnotatedWith(AutoManage.class);
-                for (Class<?> clzz :set) {
-                    if(Config.class.isAssignableFrom(clzz)){
-                        AutoManage autoManage = clzz.getAnnotation(AutoManage.class);
-                        String properties = autoManage.value();
-                        clzz.getConstructor(HttpMapperPropertiesUtil.class).newInstance(new HttpMapperPropertiesUtil(properties));
+                for (String configPath:configPaths) {
+                    Reflections reflections = new Reflections(configPath);
+                    Set<Class<?>> set = reflections.getTypesAnnotatedWith(AutoManage.class);
+                    for (Class<?> clzz : set) {
+                        if (Config.class.isAssignableFrom(clzz)) {
+                            AutoManage autoManage = clzz.getAnnotation(AutoManage.class);
+                            String properties = autoManage.value();
+                            clzz.getConstructor(HttpMapperPropertiesUtil.class).newInstance(new HttpMapperPropertiesUtil(properties));
+                        }
                     }
                 }
             }
         }catch (Exception e){
             logger.error("ConfigManager init failed! e==>{}",e);
         }
-
     }
 
 
