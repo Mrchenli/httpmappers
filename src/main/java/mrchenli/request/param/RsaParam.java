@@ -7,4 +7,6 @@ import java.lang.annotation.*;
 @Target({ElementType.PARAMETER})
 public @interface RsaParam {
     String value();
+    String signName() default "sign";
+    String desKeyName() default "des_key";
 }

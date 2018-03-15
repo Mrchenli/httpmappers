@@ -21,7 +21,9 @@ public class ReflectUtil {
                     if(f.get(params)==null){
                         continue;
                     }
-
+                    if(f.isAnnotationPresent(IgnoreField.class)){
+                        continue;
+                    }
                     if(temHeaders!=null){
                         if(f.isAnnotationPresent(HeaderParam.class)){
                             if(f.get(params) instanceof String){

@@ -16,18 +16,17 @@ import mrchenli.propertiesconfig.Config;
 import mrchenli.propertiesconfig.ConfigManager;
 import mrchenli.request.MapperRequest;
 import mrchenli.request.param.*;
-import mrchenli.response.FastJsonResponseHandler;
 import mrchenli.utils.MapperRequestKeyUtil;
+import mrchenli.utils.ObjectFieldSortUtil;
 import mrchenli.utils.ReflectUtil;
+import mrchenli.utils.StringUtil;
 import org.apache.http.HttpResponse;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -89,15 +88,19 @@ public class MapperProxyFactory extends AbstractInvocationHandler{
                             RsaBean rsaBean = doRsa(ConfigManager.getConfig(request.getConfigKey()),args[i]);
                             String param = ((RsaParam) annotation).value();
                             tmpParams.put(param,rsaBean.getRsa_string());
-                            tmpParams.put("sign",rsaBean.getSign());
-                            tmpParams.put("des_key",rsaBean.getDes_key());
+                            tmpParams.put(((RsaParam) annotation).signName(),rsaBean.getSign());
+                            tmpParams.put(((RsaParam) annotation).desKeyName(),rsaBean.getDes_key());
                             continue outer;
                         }
-                        if(annotation instanceof SignParam){
+                        if(annotation instanceof SignParam){//todo
                             SignBean signBean = doSign(ConfigManager.getConfig(request.getConfigKey()),args[i]);
                             String param = ((SignParam) annotation).value();
-                            tmpParams.put("sign",signBean.getSign());
-                            tmpParams.put(param,args[i]);
+                            if(StringUtil.isEmpty(param)){
+                                ReflectUtil.objectToMap(tmpParams,tempHeaders,tempUrlParams,args[i]);
+                            }else{
+                                tmpParams.put(param,args[i]);
+                            }
+                            tmpParams.put(((SignParam) annotation).signName(),signBean.getSign());
                             continue outer;
                         }
                         if (annotation instanceof ReqParam) {
@@ -167,8 +170,11 @@ public class MapperProxyFactory extends AbstractInvocationHandler{
         String rsaData;
         if(data instanceof String){
             rsaData = (String) data;
-        }else{
+        }else if(Map.class.isAssignableFrom(data.getClass())|| List.class.isAssignableFrom(data.getClass())){
             rsaData = JSONObject.toJSONString(data);
+        }else{
+            //rsaData = JSONObject.toJSONString(data);
+            rsaData = ObjectFieldSortUtil.getSignString(data);
         }
         RsaService rsaService;
         //这里适配下变态的给把他们私钥给我们用来签名的
