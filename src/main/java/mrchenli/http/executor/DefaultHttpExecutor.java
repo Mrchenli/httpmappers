@@ -19,6 +19,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -146,6 +147,12 @@ public class DefaultHttpExecutor implements HttpExecutor,AutoCloseable {
                 case GET:{
                     final HttpGet httpGet = new HttpGet();
                     httpGet.setURI(new URI(url));
+                    RequestConfig requestConfig = RequestConfig.custom()
+                            .setConnectTimeout(5000)
+                            .setConnectionRequestTimeout(5000)
+                            .setSocketTimeout((int) request.getRequestInfo().getTimeOut())
+                            .build();
+                    httpGet.setConfig(requestConfig);
                     httpGet.setHeader("Content-Encoding",request.getRequestInfo().getUrlCharset());
                     return httpGet;
                 }
@@ -154,6 +161,12 @@ public class DefaultHttpExecutor implements HttpExecutor,AutoCloseable {
                     final HttpPost httpPost = new HttpPost();
                     httpPost.setEntity(createHttpEntity(params,request.getEntityType()));
                     httpPost.setURI(new URI(url));
+                    RequestConfig requestConfig = RequestConfig.custom()
+                            .setConnectTimeout(5000)
+                            .setConnectionRequestTimeout(5000)
+                            .setSocketTimeout((int) request.getRequestInfo().getTimeOut())
+                            .build();
+                    httpPost.setConfig(requestConfig);
                     httpPost.setHeader("Content-Encoding",request.getRequestInfo().getUrlCharset());
                     return httpPost;
                 }

@@ -12,5 +12,5 @@ public @interface Request {
 
     String urlCharset() default "UTF-8";
 
-    long timeout() default -1;
+    long timeout() default 30000;
 }

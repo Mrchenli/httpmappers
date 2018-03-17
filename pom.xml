@@ -66,6 +66,13 @@
             <artifactId>jaxen</artifactId>
             <version>1.1.1</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk16</artifactId>
+            <version>1.46</version>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -80,29 +87,6 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
-
         </plugins>
     </build>
-
-   <!-- <distributionManagement>
-        <repository>
-            <id>nexus</id>
-            <name>releases</name>
-            <url>http://127.0.0.1:8081/nexus/content/repositories/releases/</url>
-        </repository>
-    </distributionManagement>-->
-   <!-- <distributionManagement>
-        <repository>
-            <id>nexus</id>
-            <url>
-                http://10.0.10.74:8081/repository/localmaven/releases/
-            </url>
-        </repository>
-        <snapshotRepository>
-            <id>nexus</id>
-            <url>
-                http://10.0.10.74:8081/repository/localmaven/snapshots/
-            </url>
-        </snapshotRepository>
-    </distributionManagement> -->
 </project>
