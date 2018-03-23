@@ -2,7 +2,7 @@ package httpmapper.xmlTest;
 
 import com.alibaba.fastjson.JSONObject;
 import mrchenli.utils.Dom4jUtil;
-import org.dom4j.*;
+import org.dom4j.DocumentException;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
@@ -75,6 +75,46 @@ public class Dom4jUtilTest<T> {
         return null;
     }
 
+    @Test
+    public void testList() throws DocumentException {
+        String str ="<Message>\n" +
+                "<Head>\n" +
+                "<ReqJnlNo>13560569780547</ReqJnlNo>\n" +
+                "    <ResJnlNo>1987294</ResJnlNo>\n" +
+                "    <ResTime>2012-12-21 11:00:43</ResTime>\n" +
+                "    <ResCode>000000</ResCode>\n" +
+                "    <ResMsg></ResMsg>\n" +
+                "</Head>\n" +
+                "<Body>\n" +
+                "<CifClientId>1111</CifClientId>\n" +
+                "<MakeLoanApplySeq>10.1.240.132</MakeLoanApplySeq>\n" +
+                "<MakeLoanState>21</MakeLoanState>\n" +
+                "<MakeLoanAmount>21</MakeLoanAmount>\n" +
+                "<PromptMessage>21</PromptMessage>\n" +
+                "    <List>\n" +
+                "        <Map>\n" +
+                "            <LoanDateLineUnit>100100549532</LoanDateLineUnit>\n" +
+                "            <LoanDateLine>76900161000178027</LoanDateLine>\n" +
+                "            <StrikeRate>1</StrikeRate>\n" +
+                "            <BaseRate>1</BaseRate>\n" +
+                "        </Map>\n" +
+                "\t\t<Map>\n" +
+                "            <LoanDateLineUnit>100100549532</LoanDateLineUnit>\n" +
+                "            <LoanDateLine>76900161000178027</LoanDateLine>\n" +
+                "            <StrikeRate>2</StrikeRate>\n" +
+                "            <BaseRate>2</BaseRate>\n" +
+                "        </Map>\n" +
+                "    </List>\n" +
+                "<LoanNo></LoanNo>\n" +
+                "<ModeOfRepayment></ModeOfRepayment>\n" +
+                "<LoansTo></LoansTo>\n" +
+                "<UseOfProceeds></UseOfProceeds>\n" +
+                "<PayDay></PayDay>\n" +
+                "</Body>\n" +
+                "</Message>";
 
+        Message message = Dom4jUtil.parseGennericResult(str,Message.class,CebBIdInteractiveBean.class);
+        System.out.println(JSONObject.toJSONString(message));
+    }
 
 }

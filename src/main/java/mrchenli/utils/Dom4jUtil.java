@@ -85,8 +85,10 @@ public class Dom4jUtil {
                         Node lnode = node.selectSingleNode(name);
                         if(lnode!=null){
                             String path = upperCase(ft.getSimpleName());
-
                             List<Node> nodes = lnode.selectNodes(path);
+                            if(nodes==null||nodes.size()==0){
+                                nodes = lnode.selectNodes("Map");
+                            }
                             if(nodes!=null){
                                 List list = new ArrayList();
                                 if(Map.class.isAssignableFrom(ft)){
@@ -97,7 +99,9 @@ public class Dom4jUtil {
                                 }else{
                                     list = parseList(nodes,ft,false);
                                 }
+                                f.setAccessible(true);
                                 f.set(o,list);
+                                f.setAccessible(false);
                             }
                         }
                     }else if(String.class.isAssignableFrom(clzz)){//parseString
@@ -116,6 +120,7 @@ public class Dom4jUtil {
                 return o;
             }
         }catch (Exception e){
+            e.printStackTrace();
             LOGGER.info("xml response handler error e==>{}",e);
         }
         return null;
