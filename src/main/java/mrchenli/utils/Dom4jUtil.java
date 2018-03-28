@@ -70,7 +70,7 @@ public class Dom4jUtil {
                     }else{
                         clzz = f.getType();
                     }
-                    String name = upperCase(f.getName());
+                    String name = StringUtil.upperFirst(f.getName());
                     if(Map.class.isAssignableFrom(clzz)){//parseMap//
                         if(f.isAnnotationPresent(XmlORM.class)){
                             XmlORM xmlPath= f.getAnnotation(XmlORM.class);
@@ -84,7 +84,7 @@ public class Dom4jUtil {
                         Class ft = (Class) pt.getActualTypeArguments()[0];
                         Node lnode = node.selectSingleNode(name);
                         if(lnode!=null){
-                            String path = upperCase(ft.getSimpleName());
+                            String path = StringUtil.upperFirst(ft.getSimpleName());
                             List<Node> nodes = lnode.selectNodes(path);
                             if(nodes==null||nodes.size()==0){
                                 nodes = lnode.selectNodes("Map");
@@ -127,13 +127,13 @@ public class Dom4jUtil {
     }
 
 
-    public static String upperCase(String str) {
+ /*   public static String upperCase(String str) {
         char[] ch = str.toCharArray();
         if (ch[0] >= 'a' && ch[0] <= 'z') {
             ch[0] = (char) (ch[0] - 32);
         }
         return new String(ch);
-    }
+    }*/
 
     public static <T> T parseResult(String res ,Class<T> type) throws DocumentException {
         return parseGennericResult(res,type,null);

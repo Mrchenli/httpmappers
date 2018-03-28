@@ -34,6 +34,8 @@ public class ObjectFieldSortUtil {
             Collections.sort(list, (o1, o2) -> {
                 String o1Name = o1.getName();
                 String o2Name = o2.getName();
+                o1Name  = StringUtil.upperFirst(o1Name);
+                o2Name = StringUtil.upperFirst(o2Name);
                 if(o1Name.matches(markReg)&&o2Name.matches(markReg)){
                     Pattern p = Pattern.compile(markNo);
                     Matcher m1 = p.matcher(o1Name);
@@ -44,7 +46,7 @@ public class ObjectFieldSortUtil {
                     int o2Int = Integer.parseInt(no2);
                     return o1Int-o2Int;
                 }
-                return o1.getName().compareTo(o2.getName());
+                return o1Name.compareTo(o2Name);
             });
             StringBuilder sb = new StringBuilder();
             for (int i=0;i<list.size();i++){
@@ -65,5 +67,6 @@ public class ObjectFieldSortUtil {
         }
         return "";
     }
+
 
 }
