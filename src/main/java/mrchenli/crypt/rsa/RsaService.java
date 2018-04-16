@@ -1,8 +1,10 @@
 package mrchenli.crypt.rsa;
 
-public interface RsaService {
+public interface RsaService{
 
     String encrypt(String plain_data);
+
+    String encryptByPri(String plain_data);
 
     String decrypt(String encry_data);
 

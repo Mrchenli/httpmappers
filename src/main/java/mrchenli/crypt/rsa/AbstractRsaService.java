@@ -5,6 +5,7 @@ import org.apache.commons.codec.binary.Base64;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.*;
 import java.security.interfaces.RSAPrivateKey;
@@ -19,7 +20,7 @@ public abstract class AbstractRsaService implements RsaService {
     protected RSAPrivateKey privateKey;
     protected PKCS8EncodedKeySpec pkeySpec;
     protected X509EncodedKeySpec xkeySpec;
-
+    final int MAX_ENCRYPT_BLOCK = 117;
 
 
     public AbstractRsaService(String privateKey, String publicKey) {
@@ -65,6 +66,37 @@ public abstract class AbstractRsaService implements RsaService {
             cipher.init(Cipher.ENCRYPT_MODE, this.publicKey);
             byte[] output = cipher.doFinal(plain_data.getBytes());
             return Base64.encodeBase64String(output);
+        } catch (BadPaddingException e) {
+            e.printStackTrace();
+        } catch (IllegalBlockSizeException e) {
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public String encryptByPri(String plain_data) {
+        try {
+            Cipher cipher = getCipper();
+            cipher.init(Cipher.ENCRYPT_MODE, this.privateKey);
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            byte[] data = plain_data.getBytes();
+            int inputLen = data.length;
+            int offSet = 0;
+            byte[] cache;
+            while (inputLen-offSet>0){//是否解决完了
+                if(inputLen-offSet>MAX_ENCRYPT_BLOCK){
+                    cache = cipher.doFinal(data,offSet,MAX_ENCRYPT_BLOCK);
+                    offSet+=MAX_ENCRYPT_BLOCK;
+                }else{
+                    cache = cipher.doFinal(data,offSet,inputLen-offSet);
+                    offSet+=inputLen-offSet;
+                }
+                outputStream.write(cache,0,cache.length);
+            }
+            return Base64.encodeBase64String(outputStream.toByteArray());
         } catch (BadPaddingException e) {
             e.printStackTrace();
         } catch (IllegalBlockSizeException e) {
@@ -164,5 +196,6 @@ public abstract class AbstractRsaService implements RsaService {
         }
         return null;
     }
+
 
 }

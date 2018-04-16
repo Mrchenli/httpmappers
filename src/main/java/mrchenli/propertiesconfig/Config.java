@@ -3,10 +3,13 @@ package mrchenli.propertiesconfig;
 
 import mrchenli.crypt.des.DesService;
 import mrchenli.crypt.rsa.RsaService;
+import mrchenli.crypt.rsa.SignService;
+import mrchenli.utils.StringUtil;
 
 public abstract class Config{
 
     private RsaService rsaService;
+    private SignService signService;
     private RsaService thirdRsaService;
     private DesService desService;
     protected HttpMapperPropertiesUtil httpMapperPropertiesUtil;
@@ -28,8 +31,29 @@ public abstract class Config{
     public abstract String getPublic_key();
 
     public abstract String getRsaServiceStr();
+
+    public String getSignServiceStr(){
+        return null;
+    }
     public abstract String getDesServiceStr();
 
+    public  SignService getSignService(){
+        try {
+            if(signService!=null){
+                return signService;
+            }
+            String signServiceStr = getSignServiceStr();
+            if(StringUtil.isEmpty(signServiceStr)){
+                return null;
+            }
+            Class clzz = Class.forName(signServiceStr);
+            signService = (SignService) clzz.newInstance();
+            return signService;
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
+    }
     public  RsaService getRsaService(){
         try {
             if(rsaService!=null){

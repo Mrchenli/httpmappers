@@ -8,6 +8,7 @@ import com.google.common.reflect.Reflection;
 import mrchenli.config.Configuration;
 import mrchenli.crypt.des.DesService;
 import mrchenli.crypt.rsa.RsaService;
+import mrchenli.crypt.rsa.SignService;
 import mrchenli.crypt.rsa.bean.RsaBean;
 import mrchenli.crypt.rsa.bean.SignBean;
 import mrchenli.handler.PostProcessor;
@@ -85,11 +86,24 @@ public class MapperProxyFactory extends AbstractInvocationHandler{
                     Annotation[] annotations = parameterAnnotations[i];
                     for (Annotation annotation : annotations) {
                         if(annotation instanceof RsaParam){
-                            RsaBean rsaBean = doRsa(ConfigManager.getConfig(request.getConfigKey()),args[i]);
+                            EncryptType type = ((RsaParam) annotation).encType();
                             String param = ((RsaParam) annotation).value();
-                            tmpParams.put(param,rsaBean.getRsa_string());
-                            tmpParams.put(((RsaParam) annotation).signName(),rsaBean.getSign());
-                            tmpParams.put(((RsaParam) annotation).desKeyName(),rsaBean.getDes_key());
+                            RsaBean rsaBean = null;
+                            switch (type){
+                                case RSA_DES_PRI_PUB:
+                                    rsaBean = doRsaDesPriPub(ConfigManager.getConfig(request.getConfigKey()),args[i]);
+                                    tmpParams.put(param,rsaBean.getRsa_string());
+                                    tmpParams.put(((RsaParam) annotation).signName(),rsaBean.getSign());
+                                    tmpParams.put(((RsaParam) annotation).desKeyName(),rsaBean.getDes_key());
+                                    break ;
+                                case RSA_PRI_PRI:
+                                    rsaBean = doRsaPriPri(ConfigManager.getConfig(request.getConfigKey()),args[i]);
+                                    tmpParams.put(param,rsaBean.getRsa_string());
+                                    tmpParams.put(((RsaParam) annotation).signName(),rsaBean.getSign());
+                                    break ;
+                                default:
+                                    break ;
+                            }
                             continue outer;
                         }
                         if(annotation instanceof SignParam){//todo
@@ -142,7 +156,7 @@ public class MapperProxyFactory extends AbstractInvocationHandler{
         return target;
     }
 
-    public RsaBean doRsa(Config config,Object data){
+    public RsaBean doRsaDesPriPub(Config config,Object data){
         checkNotNull(data);
         checkNotNull(config);
         String rsaData;
@@ -163,6 +177,22 @@ public class MapperProxyFactory extends AbstractInvocationHandler{
         return new RsaBean(sign,des_key,biz_data);
     }
 
+    public RsaBean doRsaPriPri(Config config,Object data){
+        checkNotNull(data);
+        checkNotNull(config);
+        String rsaData;
+        if(data instanceof String){
+            rsaData = (String) data;
+        }else{
+            rsaData = JSONObject.toJSONString(data);
+        }
+        logger.info("des加密前的数据是==>{}",rsaData);
+        RsaService rsaService = config.getRsaService();
+        String biz_data = rsaService.encryptByPri(rsaData);
+        String sign = rsaService.generateSign(biz_data);
+        return new RsaBean(sign,"",biz_data);
+    }
+
 
     public SignBean doSign(Config config, Object data){
         checkNotNull(data);
@@ -174,7 +204,14 @@ public class MapperProxyFactory extends AbstractInvocationHandler{
             rsaData = JSONObject.toJSONString(data);
         }else{
             //rsaData = JSONObject.toJSONString(data);
-            rsaData = ObjectFieldSortUtil.getSignString(data);
+            SignService signService = config.getSignService();
+            if(signService!=null){
+                rsaData = signService.objParamSort(data);
+                String sign = signService.generateSign(rsaData);
+                return new SignBean(sign);
+            }else{
+                rsaData = ObjectFieldSortUtil.getSignString(data);
+            }
         }
         RsaService rsaService;
         //这里适配下变态的给把他们私钥给我们用来签名的

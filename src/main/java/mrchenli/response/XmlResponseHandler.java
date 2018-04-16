@@ -19,7 +19,7 @@ public class XmlResponseHandler implements ResponseHandler{
     public Object handle(MapperRequest request, HttpResponse response) throws DocumentException, IOException {
         final HttpEntity entity = response.getEntity();
         String text = EntityUtils.toString(entity,"utf-8");
-        logger.debug("******"+request.getRequestInfo().getUrl()+"*****"+"result:result={}",text);
+        logger.info("******"+request.getRequestInfo().getUrl()+"*****"+"result:result={}",text);
         Class returnType = request.getMethod().getReturnType();
         Type type = request.getMethod().getGenericReturnType();
         Class genericFiled = type instanceof ParameterizedType? (Class) ((ParameterizedType) type).getActualTypeArguments()[0] :null;
