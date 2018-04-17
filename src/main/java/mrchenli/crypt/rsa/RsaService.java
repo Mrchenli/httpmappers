@@ -1,17 +1,15 @@
 package mrchenli.crypt.rsa;
 
-public interface RsaService{
+public interface RsaService {
 
-    String encrypt(String plain_data);
+	String encrypt(String plain_data);
 
-    String encryptByPri(String plain_data);
+	String decrypt(String encry_data);
 
-    String decrypt(String encry_data);
+	boolean verifySign(String sign, String param);
 
-    boolean verifySign(String sign, String param);
+	String generateSign(String params);
 
-    String generateSign(String params);
-
-    String generateSignWithPrivateKey(String params, String privateKey);
+	String generateSignWithPrivateKey(String params, String privateKey);
 
 }

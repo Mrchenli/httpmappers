@@ -5,11 +5,9 @@ import java.lang.annotation.*;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER})
-public @interface RsaParam {
-	String value();
+public @interface RsaPublicParam {
+	String value() default "data";
 
 	String signName() default "sign";
-
-	String desKeyName() default "des_key";
 
 }
