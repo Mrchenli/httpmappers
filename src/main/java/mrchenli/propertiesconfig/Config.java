@@ -112,6 +112,7 @@ public abstract class Config{
     public Config(HttpMapperPropertiesUtil httpMapperPropertiesUtil,String str){
         this.httpMapperPropertiesUtil = httpMapperPropertiesUtil;
         ConfigManager.addConfig(str,this);
+        ConfigManager.addConfig(this.getClass().getCanonicalName(),this);
     }
 
 
