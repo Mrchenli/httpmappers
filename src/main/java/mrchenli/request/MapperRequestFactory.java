@@ -13,6 +13,7 @@ import mrchenli.request.type.POST;
 import mrchenli.response.Response;
 import mrchenli.response.FastJsonResponseHandler;
 import mrchenli.utils.MapperRequestKeyUtil;
+import mrchenli.utils.StringUtil;
 import org.reflections.Reflections;
 
 import java.lang.reflect.Method;
@@ -75,6 +76,13 @@ public class MapperRequestFactory {
         requestInfo.setUrl(request.value());
         requestInfo.setUrlCharset(request.urlCharset());
         requestInfo.setTimeOut(request.timeout());
+        if(StringUtil.isEmpty(request.desc())){
+            String desc = method.getDeclaringClass().getSimpleName()+method.getName();
+            requestInfo.setDesc(desc);
+        }else{
+            requestInfo.setDesc(request.desc());
+        }
+
         mapperRequest.setRequestInfo(requestInfo);
 
         //解析其他

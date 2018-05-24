@@ -25,7 +25,7 @@ public class HttpMapperPropertiesUtil {
             propertie.load(reader);
             is.close();
         } catch (Exception ex) {
-            logger.error("装载文件--->失败！- 原因：文件路径错误或者文件不存在 e==>{}",ex);
+            logger.error("装载文件--->失败！- 原因：文件路径错误或者文件不存在 filePath==>{}, e==>{}",filePath,ex);
         }
     }
 

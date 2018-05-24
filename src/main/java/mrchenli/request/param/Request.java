@@ -13,4 +13,6 @@ public @interface Request {
     String urlCharset() default "UTF-8";
 
     long timeout() default 30000;
+
+    String desc() default "";//请求的描述
 }

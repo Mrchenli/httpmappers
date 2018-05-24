@@ -8,5 +8,6 @@ public class RequestInfo {
     private String url;
     private String urlCharset;
     private long timeOut;
+    private String desc;
 
 }

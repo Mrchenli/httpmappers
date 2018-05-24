@@ -1,5 +1,6 @@
 package mrchenli.response;
 
+import com.alibaba.fastjson.JSONObject;
 import mrchenli.request.MapperRequest;
 import mrchenli.utils.Dom4jUtil;
 import org.apache.http.HttpEntity;
@@ -19,10 +20,12 @@ public class XmlResponseHandler implements ResponseHandler{
     public Object handle(MapperRequest request, HttpResponse response) throws DocumentException, IOException {
         final HttpEntity entity = response.getEntity();
         String text = EntityUtils.toString(entity,"utf-8");
-        logger.info("******"+request.getRequestInfo().getUrl()+"*****"+"result:result={}",text);
+        logger.debug("******"+request.getRequestInfo().getUrl()+"*****"+"result:result={}",text);
         Class returnType = request.getMethod().getReturnType();
         Type type = request.getMethod().getGenericReturnType();
         Class genericFiled = type instanceof ParameterizedType? (Class) ((ParameterizedType) type).getActualTypeArguments()[0] :null;
-        return Dom4jUtil.parseGennericResult(text,returnType,genericFiled);
+        Object object =  Dom4jUtil.parseGennericResult(text,returnType,genericFiled);
+        logger.info(request.getRequestInfo().getDesc()+"请求结果:"+ JSONObject.toJSONString(object));
+        return object;
     }
 }
